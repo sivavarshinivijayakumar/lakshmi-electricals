@@ -1,0 +1,17 @@
+
+# Private database configuration
+/config/database.php
+
+# Environment secrets
+.env
+.env.*
+
+# Temporary and backup files
+*.log
+*.sql
+*.zip
+*.bak
+
+# Operating system files
+Thumbs.db
+.DS_Store

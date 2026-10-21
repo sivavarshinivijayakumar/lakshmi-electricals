@@ -1,0 +1,13 @@
+<?php
+require_once __DIR__.'/../includes/bootstrap.php';require_admin();
+$stats=[
+'products'=>(int)$pdo->query("SELECT COUNT(*) FROM products")->fetchColumn(),
+'categories'=>(int)$pdo->query("SELECT COUNT(*) FROM categories")->fetchColumn(),
+'stock'=>(int)$pdo->query("SELECT COALESCE(SUM(stock_quantity),0) FROM products WHERE is_active=1")->fetchColumn(),
+'low'=>(int)$pdo->query("SELECT COUNT(*) FROM products WHERE is_active=1 AND stock_quantity<=5")->fetchColumn(),
+'orders'=>(int)$pdo->query("SELECT COUNT(*) FROM orders WHERE status='Pending'")->fetchColumn(),
+'customers'=>(int)$pdo->query("SELECT COUNT(*) FROM users WHERE role='customer'")->fetchColumn()];
+$recent=$pdo->query("SELECT o.id,o.status,o.total_amount,o.created_at,u.name FROM orders o JOIN users u ON u.id=o.user_id ORDER BY o.created_at DESC LIMIT 8")->fetchAll();
+$pageTitle='Admin dashboard';require __DIR__.'/../includes/header.php';?>
+<div class="admin-layout"><aside class="admin-sidebar"><span class="eyebrow">MANAGEMENT</span><h2>Admin panel</h2><a class="active" href="/lakshmi-electricals/admin/dashboard.php">Dashboard</a><a href="/lakshmi-electricals/admin/categories.php">Categories</a><a href="/lakshmi-electricals/admin/products.php">Products</a><a href="/lakshmi-electricals/admin/orders.php">Order requests</a><a href="/lakshmi-electricals/admin/users.php">Customers</a></aside><section class="admin-content"><div class="section-heading"><div><span class="eyebrow">OVERVIEW</span><h1>Shop dashboard</h1></div><span class="muted">Signed in as <?= e(current_user()['name']) ?></span></div><div class="stats-grid"><?php foreach([['Products',$stats['products']],['Categories',$stats['categories']],['Units in stock',$stats['stock']],['Low-stock items',$stats['low']],['Pending requests',$stats['orders']],['Customers',$stats['customers']]] as [$label,$value]): ?><div class="stat-card"><span><?= e($label) ?></span><strong><?= $value ?></strong></div><?php endforeach; ?></div><div class="panel"><div class="section-heading"><h2>Recent order requests</h2><a class="text-link" href="/lakshmi-electricals/admin/orders.php">Manage all →</a></div><?php if($recent): ?><div class="table-scroll"><table><thead><tr><th>Request</th><th>Customer</th><th>Date</th><th>Estimate</th><th>Status</th></tr></thead><tbody><?php foreach($recent as $r): ?><tr><td>#<?= (int)$r['id'] ?></td><td><?= e($r['name']) ?></td><td><?= e(date('d M Y',strtotime($r['created_at']))) ?></td><td><?= money($r['total_amount']) ?></td><td><span class="status"><?= e($r['status']) ?></span></td></tr><?php endforeach; ?></tbody></table></div><?php else: ?><p class="muted">No order requests have been submitted yet.</p><?php endif; ?></div></section></div>
+<?php require __DIR__.'/../includes/footer.php'; ?>
